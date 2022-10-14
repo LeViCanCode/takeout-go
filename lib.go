@@ -87,7 +87,7 @@ func (c Client) GetLocalTemplate(p string) (string, error) {
 	return h, nil
 }
 
-// GetCloudTemplate returns minified template from the Takeout cdn
+// GetCloudTemplate Returns minified template from the Takeout cdn
 func (c Client) GetCloudTemplate(name string) (string, error) {
 	resp, err := c.httpClient.Get(fmt.Sprintf("https://cdn-takeout.bysourfruit.com/cloud/read?name=%s&token=%s", name, c.token))
 	if err != nil {
@@ -111,3 +111,5 @@ func minifyHTML(data []byte) (string, error) {
 	m.AddFunc("text/html", html.Minify)
 	return m.String("text/html", string(data))
 }
+
+// SendEmail
