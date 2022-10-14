@@ -33,6 +33,17 @@ type (
 		Debug      bool
 		HttpClient *http.Client
 	}
+	EmailTemplate struct {
+		From    string   `json:"from,omitempty"`
+		To      string   `json:"to,omitempty"`
+		Subject string   `json:"subject,omitempty"`
+		CC      []string `json:"cc,omitempty"`
+		ReplyTo string   `json:"reply_to,omitempty"`
+		Body    struct {
+			HTML string `json:"bodyText,omitempty"`
+			Text string `json:"bodyHTML,omitempty"`
+		}
+	}
 )
 
 // New Create a new Client
@@ -112,4 +123,29 @@ func minifyHTML(data []byte) (string, error) {
 	return m.String("text/html", string(data))
 }
 
-// SendEmail
+// SendEmail send an email using Takeout
+func (c Client) SendEmail(template EmailTemplate) (bool, error) {
+	// TODO: possibly add character verification here?
+	body, err := json.Marshal(template)
+	if err != nil {
+		return false, err
+	}
+	req, err := http.NewRequest("POST", c.baseUrl+"/email/send", bytes.NewReader(body))
+	if err != nil {
+		return false, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Token "+c.token)
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return false, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return false, FailedToSendEmail
+	}
+	defer resp.Body.Close()
+	body, err = io.ReadAll(resp.Body)
+	fmt.Println(string(body))
+	// NOTICE: I left off here (Need to get response json to parse and add error handling)
+	return true, nil
+}
